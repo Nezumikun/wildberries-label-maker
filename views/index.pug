@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  h1 Wildberies label maker
+  form(
+     method='post'
+     enctype='multipart/form-data'
+  )
+    p
+      label(for="file") Выберите файл со списком товаров
+      span &nbsp;
+      input(
+        type='file'
+        id='file'
+        name='file'
+      )
+    p
+      button Сгенерировать наклейки
+  p
+  a(
+    href='/files/template.xlsx'
+  ) Шаблон для заполнения
