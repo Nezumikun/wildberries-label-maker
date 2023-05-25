@@ -14,7 +14,7 @@ const JSZip = require('jszip')
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Wildberries label maker' })
+  res.render('index', { })
 })
 
 const parseXLSX = async function (data) {
@@ -156,39 +156,43 @@ const createZip = async function (data) {
 }
 
 router.post('/', async function (req, res, next) {
-  const form = formidable({ multiples: true })
-  const files = await new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      resolve(files)
+  try {
+    const form = formidable({ multiples: true })
+    const files = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(files)
+      })
     })
-  })
-  const xlsxBytes = fs.readFileSync(files.file.filepath)
-  const labels = await parseXLSX(xlsxBytes)
-  const pdfFiles = []
-  for (const label of labels) {
-    pdfFiles.push(await createPdf(label))
-  }
-  if (pdfFiles.length === 1) {
-    res.writeHead(200, {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': contentDisposition(pdfFiles[0].filename)
-    })
-    res.write(pdfFiles[0].data)
-    res.end()
-  } else if (pdfFiles.length > 1) {
-    const zip = await createZip(pdfFiles)
-    res.writeHead(200, {
-      'Content-Type': 'application/zip',
-      'Content-Disposition': contentDisposition(dayjs().format('YYYYMMDD_HHmmss') + '.zip')
-    })
-    res.write(zip)
-    res.end()
-  } else {
-    res.render('index', { title: 'Upload' })
+    const xlsxBytes = fs.readFileSync(files.file.filepath)
+    const labels = await parseXLSX(xlsxBytes)
+    const pdfFiles = []
+    for (const label of labels) {
+      pdfFiles.push(await createPdf(label))
+    }
+    if (pdfFiles.length === 1) {
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': contentDisposition(pdfFiles[0].filename)
+      })
+      res.write(Buffer.from(pdfFiles[0].data))
+      res.end()
+    } else if (pdfFiles.length > 1) {
+      const zip = await createZip(pdfFiles)
+      res.writeHead(200, {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': contentDisposition(dayjs().format('YYYYMMDD_HHmmss') + '.zip')
+      })
+      res.write(Buffer.from(zip.buffer))
+      res.end()
+    } else {
+      res.render('index', { })
+    }
+  } catch (err) {
+    res.render('index', { err })
   }
 })
 

@@ -20,3 +20,8 @@ block content
   a(
     href='/files/template.xlsx'
   ) Шаблон для заполнения
+  p 
+  if err
+    div.error
+      h2 #{err.message}
+      pre #{err.stack}
