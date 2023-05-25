@@ -1,10 +1,11 @@
 {
-  "name": "labels",
-  "version": "0.0.0",
+  "name": "wildberries-label-maker",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node --inspect ./bin/www",
-    "dev": "DEBUG=labels:* npm start"
+    "start": "node ./bin/www",
+    "dev": "DEBUG=labels:* supervisor --inspect -w bin/www,routes,app.js ./bin/www",
+    "dev:docker": "docker-compose -f docker-compose.dev.yaml up"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
