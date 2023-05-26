@@ -1,0 +1,10 @@
+version: "2"
+services:
+  dev:
+    build: "."
+    user: "node"
+    working_dir: /home/node/app
+    restart: always
+    ports:
+      - "3000:3000"
+    command: "npm run start"
