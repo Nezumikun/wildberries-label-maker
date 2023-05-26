@@ -25,22 +25,44 @@ const parseXLSX = async function (data) {
   const result = []
   while (true) {
     if (typeof (ws['A' + rowNumber]) === 'undefined') break
-    result.push({
-      text: [
-        ws['A' + rowNumber].v,
-        ws['B' + rowNumber].v,
-        'Арт. ' + ws['C' + rowNumber].v
-      ],
-      subtext: [
-        'Производитель: ' + ws['D' + rowNumber].v
-      ],
-      barcode: ws['E' + rowNumber].v,
-      articleNumber: ws['C' + rowNumber].v,
-      englishName: ws['B' + rowNumber].v
-    })
+    const item = {
+      russianName: (ws['A' + rowNumber] ?? {}).v ?? '',
+      englishName: (ws['B' + rowNumber] ?? {}).v ?? '',
+      articleNumber: (ws['C' + rowNumber] ?? {}).v ?? '',
+      size: (ws['D' + rowNumber] ?? {}).v ?? '',
+      manufacturer: (ws['E' + rowNumber] ?? {}).v ?? '',
+      barcode: ws['F' + rowNumber].v + ''
+    }
+    item.text = []
+    item.text.push(item.russianName + (item.englishName === '' ? '' : ' /'))
+    if (item.englishName !== '') {
+      item.text.push(item.englishName)
+    }
+    if (item.articleNumber !== '') {
+      item.text.push('Арт. ' + item.articleNumber)
+    }
+    if (item.size !== '') {
+      item.text.push(item.size)
+    }
+    item.subtext = ['Производитель: ' + item.manufacturer]
+    result.push(item)
     rowNumber++
   }
   return result
+}
+
+const getFileName = function (data) {
+  let name = (data.englishName !== '') ? data.englishName : data.russianName
+  if (data.articleNumber !== '') {
+    name += (name.length > 0) ? ' ' : ''
+    name += data.articleNumber
+  }
+  if (data.size !== '') {
+    name += (name.length > 0) ? ' ' : ''
+    name += data.size
+  }
+  name += '.pdf'
+  return name
 }
 
 const createPdf = async function (data) {
@@ -141,7 +163,7 @@ const createPdf = async function (data) {
     page.drawSvgPath(p.d, svgOpt)
   }
   return {
-    filename: data.englishName + ' ' + data.articleNumber + '.pdf',
+    filename: getFileName(data),
     data: await pdfDoc.save()
   }
 }
