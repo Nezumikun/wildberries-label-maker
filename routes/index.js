@@ -34,9 +34,14 @@ const parseXLSX = async function (data) {
       barcode: ws['F' + rowNumber].v + ''
     }
     item.text = []
-    item.text.push(item.russianName + (item.englishName === '' ? '' : ' /'))
+    const russianNameLines = item.russianName.split(/[\n\r]+/g)
     if (item.englishName !== '') {
-      item.text.push(item.englishName)
+      russianNameLines[russianNameLines.length - 1] += ' /'
+    }
+    item.text = item.text.concat(russianNameLines)
+    const englishNameLines = item.englishName.split(/[\n\r]+/g)
+    if (item.englishName !== '') {
+      item.text = item.text.concat(englishNameLines)
     }
     if (item.articleNumber !== '') {
       item.text.push('Арт. ' + item.articleNumber)
