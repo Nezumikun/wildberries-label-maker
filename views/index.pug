@@ -1,21 +1,16 @@
 extends layout
 
 block content
-  h1 Wildberries label maker
+  h1 Генератор наклеек
   form(
      method='post'
      enctype='multipart/form-data'
   )
-    p
-      label(for="file") Выберите файл со списком товаров
-      span &nbsp;
-      input(
-        type='file'
-        id='file'
-        name='file'
-      )
-    p
-      button Сгенерировать наклейки
+    div(class="mb-3")
+      label(for="formFile" class="form-label") Выберите файл со списком товаров
+      input(class="form-control" type="file" id="file" name="file")
+    div(class="mb-3")
+      button(type="submit" class="btn btn-wb") Сгенерировать наклейки
   p
   a(
     href='/files/template.xlsx'

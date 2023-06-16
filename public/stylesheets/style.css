@@ -1,12 +1,20 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
-
-a {
-  color: #00B7FF;
-}
-
 .error {
   color: red;
+}
+
+.navbar {
+  background: linear-gradient(to right,#cb11ab 0,#481173 100%) no-repeat;
+}
+
+a.navbar-brand {
+  color: white;
+}
+
+a.navbar-brand:hover {
+  color: white;
+}
+
+.btn-wb {
+  background-color: #481173;
+  color: white;
 }
