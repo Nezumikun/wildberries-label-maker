@@ -18,6 +18,10 @@ router.get('/', function (req, res, next) {
   res.render('index', { })
 })
 
+router.get('/healthcheck', function (req, res, next) {
+  res.end('Ok')
+})
+
 const parseXLSX = async function (data) {
   // open a font synchronously
   const workbook = XLSX.read(data)

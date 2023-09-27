@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wb-label-api
+  namespace: wb-label-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wb-label-dev-app
+  template:
+    metadata:
+      labels:
+        app: wb-label-dev-app
+    spec:
+      containers:
+        - name: api
+          image: wb-label:dev
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: code
+              mountPath: /home/node/app
+          livenessProbe:
+            httpGet:
+              path: /healthcheck/live
+              port: 3000
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthcheck/ready
+              port: 3000
+            timeoutSeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthcheck/startup
+              port: 3000
+            failureThreshold: 10
+            periodSeconds: 6
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "2000m"            
+      volumes:
+        - name: code
+          hostPath:
+            path: /app
+
