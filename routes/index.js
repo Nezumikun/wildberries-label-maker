@@ -11,6 +11,7 @@ const { XMLParser } = require('fast-xml-parser')
 const contentDisposition = require('content-disposition')
 const dayjs = require('dayjs')
 const JSZip = require('jszip')
+const { scale } = require('scale-that-svg')
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -78,7 +79,7 @@ const createPdf = async function (data) {
   pdfDoc.registerFontkit(fontkit)
   const customFont = await pdfDoc.embedFont(fontData)
 
-  const page = pdfDoc.addPage([58 * dpiScale, 40 * dpiScale])
+  const page = pdfDoc.addPage([data.page.size.width * dpiScale, data.page.size.height * dpiScale])
 
   let textSize = 12
   while (true) {
@@ -153,16 +154,35 @@ const createPdf = async function (data) {
     attributeNamePrefix: '',
     allowBooleanAttributes: true
   })
-  const svgParsed = parser.parse(svg)
+  let svgParsed = parser.parse(svg)
+  if ((page.getWidth() - shiftX * 2) < svgParsed.svg.width) {
+    const scaleX = (page.getWidth() - shiftX * 2) / svgParsed.svg.width
+    const rescale = await new Promise((resolve, reject) => {
+      scale(svg, {
+        scale: scaleX
+      }).then((scaledFromString) => resolve(scaledFromString))
+    })
+    svgParsed = parser.parse(rescale)
+    svgParsed.svg.width *= scaleX
+  }
+  let minw = 0
+  for (const p of svgParsed.svg.path) {
+    if (typeof (p['stroke-width']) !== 'undefined') {
+      const w = p['stroke-width']
+      if (minw === 0 || minw > w) {
+        minw = w
+      }
+    }
+  }
   for (const p of svgParsed.svg.path) {
     const svgOpt = {
       x: Math.floor((page.getWidth() - svgParsed.svg.width) / 2),
       y: svgParsed.svg.height + 2
     }
     if (typeof (p['stroke-width']) !== 'undefined') {
-      const w = p['stroke-width']
-      svgOpt.borderWidth = w
-      if (w === 2) { svgOpt.x += 1 } else if (w === 4) { svgOpt.x += 1 }
+      const w = Math.floor(p['stroke-width'] / minw)
+      svgOpt.borderWidth = p['stroke-width']
+      if (w === 2) { svgOpt.x += minw } else if (w === 4) { svgOpt.x += minw }
     }
     if (typeof (p.fill) !== 'undefined') { svgOpt.color = rgb(0, 0, 0) }
     page.drawSvgPath(p.d, svgOpt)
@@ -185,19 +205,29 @@ const createZip = async function (data) {
 router.post('/', async function (req, res, next) {
   try {
     const form = formidable({ multiples: true })
-    const files = await new Promise((resolve, reject) => {
+    const parsed = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) {
           reject(err)
           return
         }
-        resolve(files)
+        resolve({
+          files,
+          fields
+        })
       })
     })
-    const xlsxBytes = fs.readFileSync(files.file.filepath)
+    const page = {
+      size: {
+        width: parsed.fields.page_width,
+        height: parsed.fields.page_height
+      }
+    }
+    const xlsxBytes = fs.readFileSync(parsed.files.file.filepath)
     const labels = await parseXLSX(xlsxBytes)
     const pdfFiles = []
     for (const label of labels) {
+      label.page = page
       pdfFiles.push(await createPdf(label))
     }
     if (pdfFiles.length === 1) {

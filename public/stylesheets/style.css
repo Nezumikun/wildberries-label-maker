@@ -15,6 +15,11 @@ a.navbar-brand:hover {
 }
 
 .btn-wb {
+  background-color: #cb11ab;
+  color: white;
+}
+
+.btn-wb:hover {
   background-color: #481173;
   color: white;
 }
