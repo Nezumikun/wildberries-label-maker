@@ -33,12 +33,15 @@ const parseXLSX = async function (data) {
     const item = {
       russianName: (ws['A' + rowNumber] ?? {}).v ?? '',
       englishName: (ws['B' + rowNumber] ?? {}).v ?? '',
-      articleNumber: (ws['C' + rowNumber] ?? {}).v ?? '',
-      size: (ws['D' + rowNumber] ?? {}).v ?? '',
-      manufacturer: (ws['E' + rowNumber] ?? {}).v ?? '',
-      barcode: ws['F' + rowNumber].v + ''
+      color: (ws['C' + rowNumber] ?? {}).v ?? '',
+      articleNumber: (ws['D' + rowNumber] ?? {}).v ?? '',
+      size: (ws['E' + rowNumber] ?? {}).v ?? '',
+      manufacturer: (ws['F' + rowNumber] ?? {}).v ?? '',
+      structure: (ws['G' + rowNumber] ?? {}).v ?? '',
+      barcode: ws['H' + rowNumber].v + ''
     }
     item.text = []
+    item.subtext = []
     const russianNameLines = item.russianName.split(/[\n\r]+/g)
     if (item.englishName !== '') {
       russianNameLines[russianNameLines.length - 1] += ' /'
@@ -48,13 +51,21 @@ const parseXLSX = async function (data) {
     if (item.englishName !== '') {
       item.text = item.text.concat(englishNameLines)
     }
-    if (item.articleNumber !== '') {
-      item.text.push('Арт. ' + item.articleNumber)
-    }
     if (item.size !== '') {
-      item.text.push(item.size)
+      item.subtext.push('Размер: ' + item.size)
     }
-    item.subtext = ['Производитель: ' + item.manufacturer]
+    if (item.color !== '') {
+      item.subtext.push('Цвет: ' + item.color)
+    }
+    if (item.articleNumber !== '') {
+      item.subtext.push('Арт. ' + item.articleNumber)
+    }
+    if (item.structure !== '') {
+      item.subtext.push('Состав: ' + item.structure)
+    }
+    if (item.manufacturer !== '') {
+      item.subtext.push('Бренд: ' + item.manufacturer)
+    }
     result.push(item)
     rowNumber++
   }
@@ -85,7 +96,7 @@ const createPdf = async function (data) {
 
   const page = pdfDoc.addPage([data.page.size.width * dpiScale, data.page.size.height * dpiScale])
 
-  let textSize = 12
+  let textSize = 11
   while (true) {
     let sizeOk = true
     for (let i = 0; i < data.text.length; i++) {
@@ -101,7 +112,7 @@ const createPdf = async function (data) {
     }
   }
 
-  let subtextSize = textSize
+  let subtextSize = textSize - 2
   while (true) {
     let sizeOk = true
     for (let i = 0; i < data.subtext.length; i++) {
@@ -129,7 +140,7 @@ const createPdf = async function (data) {
     })
   }
 
-  shiftY -= customFont.heightAtSize(textSize)
+  shiftY -= customFont.heightAtSize(textSize) / 3
   for (const line of data.subtext) {
     shiftY -= customFont.heightAtSize(subtextSize)
     page.drawText(line, {
@@ -141,7 +152,7 @@ const createPdf = async function (data) {
     })
   }
 
-  shiftY -= customFont.heightAtSize(subtextSize) * 2
+  shiftY -= customFont.heightAtSize(subtextSize)
   const opts = {
     bcid: 'ean13',
     text: data.barcode,
