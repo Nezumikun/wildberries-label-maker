@@ -38,7 +38,8 @@ const parseXLSX = async function (data) {
       size: (ws['E' + rowNumber] ?? {}).v ?? '',
       manufacturer: (ws['F' + rowNumber] ?? {}).v ?? '',
       structure: (ws['G' + rowNumber] ?? {}).v ?? '',
-      barcode: ws['H' + rowNumber].v + ''
+      country: ws['H' + rowNumber].v + '',
+      barcode: ws['I' + rowNumber].v + ''
     }
     item.text = []
     item.subtext = []
@@ -62,6 +63,9 @@ const parseXLSX = async function (data) {
     }
     if (item.structure !== '') {
       item.subtext.push('Состав: ' + item.structure)
+    }
+    if (item.country !== '') {
+      item.subtext.push('Страна производитель: ' + item.country)
     }
     if (item.manufacturer !== '') {
       item.subtext.push('Бренд: ' + item.manufacturer)
